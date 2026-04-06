@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Package, Calendar, User as UserIcon, Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Package, Calendar, User as UserIcon, Upload, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { createWorker } from 'tesseract.js';
+import { extractDocumentData } from '@/lib/parser';
+import { enhanceImageForOcr } from '@/lib/ocrUtils';
 
 export default function CreateWarrantyPage() {
   const { data: session } = useSession();
@@ -20,6 +23,8 @@ export default function CreateWarrantyPage() {
   const [purchaseDate, setPurchaseDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [file, setFile] = useState<File | null>(null);
+
+  const [ocrStatus, setOcrStatus] = useState<{ status: string; progress: number } | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -36,6 +41,46 @@ export default function CreateWarrantyPage() {
       console.error('Failed to fetch customers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          setOcrStatus({ status: 'Enhancing image for OCR...', progress: 0 });
+          const enhancedImageData = await enhanceImageForOcr(reader.result as string);
+
+          setOcrStatus({ status: 'Loading OCR engine...', progress: 5 });
+          const worker = await createWorker('eng', 1, {
+            logger: m => {
+              if (m.status === 'recognizing text') {
+                setOcrStatus({ status: 'Extracting details...', progress: Math.max(10, Math.round(m.progress * 100)) });
+              }
+            }
+          });
+          
+          const ret = await worker.recognize(enhancedImageData);
+          await worker.terminate();
+
+          const parsed = extractDocumentData(ret.data.text);
+          if (parsed.productName && !productName) setProductName(parsed.productName);
+          if (parsed.purchaseDate && !purchaseDate) setPurchaseDate(parsed.purchaseDate);
+          if (parsed.expiryDate && !expiryDate) setExpiryDate(parsed.expiryDate);
+          
+          toast.success('Document analyzed! Check and verify extracted fields.');
+        } catch (err) {
+          console.error(err);
+          toast.error('Failed to analyze document text.');
+        } finally {
+          setOcrStatus(null);
+        }
+      };
+      reader.readAsDataURL(selectedFile);
     }
   };
 
@@ -96,7 +141,7 @@ export default function CreateWarrantyPage() {
 
         <h1 className="text-3xl font-bold mb-2">Create Warranty</h1>
         <p className="text-[var(--text-secondary)] mb-8">
-          Add a warranty record for one of your customers. They'll be notified before it expires.
+          Add a warranty record for one of your customers. Upload an image to auto-fill details from OCR.
         </p>
       </motion.div>
 
@@ -104,9 +149,47 @@ export default function CreateWarrantyPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="glass-card p-8"
+        className="glass-card p-8 relative"
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <AnimatePresence>
+          {ocrStatus && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 left-0 right-0 p-4 bg-brand-500/10 border-b border-brand-500/20 backdrop-blur-md rounded-t-2xl z-10 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 text-brand-500 animate-spin" />
+                <div>
+                  <p className="text-sm font-semibold text-brand-500">{ocrStatus.status}</p>
+                  <p className="text-xs text-brand-600/80">Auto-filling form fields (Progress: {ocrStatus.progress}%)</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <form onSubmit={handleSubmit} className={`space-y-6 ${ocrStatus ? 'opacity-50 pointer-events-none mt-12' : ''} transition-all duration-300`}>
+          
+          {/* Optional File (Moved up for OCR flow) */}
+          <div className="bg-[var(--bg-tertiary)] p-4 rounded-xl border border-[var(--border)]">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5 flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Warranty Document / Image
+            </label>
+            <p className="text-xs text-[var(--text-muted)] mb-3">
+              Upload an image first, and our smart OCR will automatically fill the fields below!
+            </p>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleFileChange}
+              className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-500/10 file:text-brand-500 hover:file:bg-brand-500/20"
+              id="warranty-file"
+            />
+          </div>
+
           {/* Customer Selector */}
           <div>
             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
@@ -183,25 +266,7 @@ export default function CreateWarrantyPage() {
             </div>
           </div>
 
-          {/* Optional File */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              <Upload className="inline h-4 w-4 mr-1" />
-              Warranty Document (optional)
-            </label>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-500/10 file:text-brand-500 hover:file:bg-brand-500/20"
-              id="warranty-file"
-            />
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Upload warranty card or receipt. Will be encrypted with customer's key.
-            </p>
-          </div>
-
-          <button type="submit" className="btn-primary w-full" disabled={submitting} id="warranty-submit">
+          <button type="submit" className="btn-primary w-full" disabled={submitting || !!ocrStatus} id="warranty-submit">
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
