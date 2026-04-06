@@ -3,6 +3,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/components/AuthProvider';
+import SmoothScroll from '@/components/SmoothScroll';
 
 export const metadata: Metadata = {
   title: 'DigiWarr - Secure Digital Locker for Warranties, Bills & Policies',
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body className="antialiased">
         <AuthProvider>
           <ThemeProvider>
-            {children}
+            <SmoothScroll>
+              {children}
+            </SmoothScroll>
             <Toaster position="top-right" />
           </ThemeProvider>
         </AuthProvider>
