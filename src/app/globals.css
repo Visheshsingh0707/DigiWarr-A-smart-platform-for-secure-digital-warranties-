@@ -129,6 +129,60 @@
   }
 }
 
+/* --- Techy UX Enhancements --- */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animated-border {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.animated-border::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent 60%, rgba(99, 102, 241, 0.7) 80%, rgba(20, 184, 166, 0.9) 100%);
+  transform-origin: 0 0;
+  animation: spin 3.5s linear infinite;
+  z-index: -1;
+  translate: -50% -50%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.animated-border:hover::before {
+  opacity: 1;
+}
+
+.animated-border::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.tech-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+}
+
+.tech-mask-slide {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

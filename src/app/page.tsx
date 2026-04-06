@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Shield, Lock, FileText, ArrowRight, CheckCircle2, Zap, Bell, Eye, ExternalLink, Globe, Mail, Store, Users, Sparkles, Star } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import HeroSection from '@/components/HeroSection';
 
 import gsap from 'gsap';
@@ -102,6 +102,35 @@ export default function Home() {
 
   }, { scope: containerRef, dependencies: [status] });
 
+  // Magnetic button logic
+  useEffect(() => {
+    if (status === 'loading') return;
+    const magnets = document.querySelectorAll('.gsap-magnetic');
+    
+    // Check if we already initialized to prevent duplicate event listeners on hot reloads
+    const initialized = Array.from(magnets).some(el => el.hasAttribute('data-magnetic-init'));
+    if (initialized) return;
+
+    magnets.forEach((elem) => {
+      const el = elem as HTMLElement;
+      el.setAttribute('data-magnetic-init', 'true');
+      
+      const handleMouseMove = (e: MouseEvent) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        gsap.to(el, { x: x * 0.3, y: y * 0.3, duration: 0.3, ease: 'power2.out' });
+      };
+      
+      const handleMouseLeave = () => {
+        gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.3)' });
+      };
+
+      el.addEventListener('mousemove', handleMouseMove);
+      el.addEventListener('mouseleave', handleMouseLeave);
+    });
+  }, [status]);
+
   // Use gsap for parallax scrolling logic
   useGSAP(() => {
     // Parallax Orbs (Dynamic Background) mapped to overall scroll
@@ -141,7 +170,8 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] overflow-hidden" ref={containerRef}>
+    <div className="min-h-screen bg-[var(--bg-primary)] overflow-hidden tech-grid" ref={containerRef}>
+      
       {/* Dynamic Background */}
       <div className="orb orb-1"></div>
       <div className="orb orb-2"></div>
@@ -166,9 +196,11 @@ export default function Home() {
           <Link href="/login" className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             Sign In
           </Link>
-          <Link href="/login" className="btn-primary py-2 px-5 !text-xs md:!text-sm">
-            Get Started Free
-          </Link>
+          <div className="gsap-magnetic">
+            <Link href="/login" className="btn-primary py-2 px-5 !text-xs md:!text-sm">
+              Get Started Free
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -187,12 +219,15 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, i) => (
-              <div key={i} className="gsap-feature-card glass-card p-8 group h-full transition-shadow hover:shadow-2xl hover:shadow-brand-500/5 cursor-default">
-                <div className={`h-14 w-14 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3`}>
-                  <feature.icon className={`h-7 w-7 ${feature.color}`} />
+              <div key={i} className="gsap-feature-card relative group h-full transition-shadow hover:shadow-2xl hover:shadow-brand-500/5 cursor-default">
+                <div className="absolute inset-0 animated-border rounded-2xl z-0 pointer-events-none"></div>
+                <div className="relative z-10 glass-card p-8 h-full flex flex-col border-none bg-transparent m-[1px]">
+                  <div className={`h-14 w-14 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                    <feature.icon className={`h-7 w-7 ${feature.color}`} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -272,40 +307,47 @@ export default function Home() {
             </div>
 
             {/* Pro Plan */}
-            <div className="gsap-price-card glass-card p-8 h-full flex flex-col relative border-brand-500/30 bg-brand-500/5 transition-transform hover:-translate-y-2 shadow-2xl shadow-brand-500/10">
-              <div className="absolute -top-3 right-6">
+            <div className="gsap-price-card relative transition-transform hover:-translate-y-2 shadow-2xl shadow-brand-500/10 h-full">
+              <div className="absolute inset-0 animated-border rounded-2xl z-0 pointer-events-none"></div>
+              
+              <div className="absolute -top-3 right-6 z-20">
                 <span className="inline-flex items-center gap-1 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                   <Star className="h-3 w-3" />
                   Popular
                 </span>
               </div>
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-1">Pro</h3>
-                <p className="text-sm text-[var(--text-muted)]">For growing businesses</p>
+
+              <div className="relative z-10 glass-card p-8 h-full flex flex-col border-none bg-transparent m-[1px]">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-1">Pro</h3>
+                  <p className="text-sm text-[var(--text-muted)]">For growing businesses</p>
+                </div>
+                <div className="mb-8">
+                  <span className="text-4xl font-black">₹499</span>
+                  <span className="text-[var(--text-muted)]"> /month</span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    'Unlimited customers',
+                    'Everything in Free',
+                    'Priority support',
+                    'Advanced analytics dashboard',
+                    'Bulk warranty creation',
+                    'Custom email templates',
+                    'API access',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <CheckCircle2 className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="gsap-magnetic">
+                  <button className="btn-primary w-full text-center opacity-80 cursor-not-allowed">
+                    Coming Soon
+                  </button>
+                </div>
               </div>
-              <div className="mb-8">
-                <span className="text-4xl font-black">₹499</span>
-                <span className="text-[var(--text-muted)]"> /month</span>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {[
-                  'Unlimited customers',
-                  'Everything in Free',
-                  'Priority support',
-                  'Advanced analytics dashboard',
-                  'Bulk warranty creation',
-                  'Custom email templates',
-                  'API access',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <CheckCircle2 className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <button className="btn-primary w-full text-center opacity-80 cursor-not-allowed">
-                Coming Soon
-              </button>
             </div>
           </div>
         </div>
@@ -324,10 +366,12 @@ export default function Home() {
           <p className="text-[var(--text-muted)] text-lg mb-10 max-w-xl mx-auto">
             Whether you're a shopkeeper managing customer warranties or a customer tracking your policies — DigiWarr has you covered.
           </p>
-          <Link href="/login" className="btn-primary text-lg py-5 px-10 group">
-            Create Your Free Vault
-            <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <div className="gsap-magnetic inline-block">
+            <Link href="/login" className="btn-primary text-lg py-5 px-10 group">
+              Create Your Free Vault
+              <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 
