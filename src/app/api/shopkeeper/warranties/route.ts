@@ -18,6 +18,12 @@ export async function POST(req: NextRequest) {
     const purchaseDate = formData.get('purchaseDate') as string;
     const expiryDate = formData.get('expiryDate') as string;
     const file = formData.get('file') as File | null;
+    
+    // Extended warranty options
+    const offerExtended = formData.get('offerExtended') === 'true';
+    const extendedPrice = formData.get('extendedPrice') ? Number(formData.get('extendedPrice')) : null;
+    const extensionDurationDays = formData.get('extensionDurationDays') ? Number(formData.get('extensionDurationDays')) : null;
+
 
     if (!customerId || !productName || !purchaseDate || !expiryDate) {
       return NextResponse.json(
@@ -113,6 +119,12 @@ Generated At: ${new Date().toISOString()}`;
         authTag,
         ocrText: ocrText.substring(0, 5000),
         createdByShopkeeper: true,
+        ...(offerExtended && extendedPrice && extensionDurationDays && {
+          isExtendedOffered: true,
+          extendedPrice,
+          extensionDurationDays,
+          extendedStatus: 'offered',
+        }),
       },
     });
 

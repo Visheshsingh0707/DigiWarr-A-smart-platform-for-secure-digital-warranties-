@@ -51,6 +51,12 @@ export async function GET(req: NextRequest) {
         documentType: doc.type,
         daysLeft: 2,
         expiryDate: doc.expiryDate!,
+        ...(doc.extendedStatus === 'offered' && doc.extendedPrice && doc.extensionDurationDays ? {
+          extendedOffer: {
+            price: doc.extendedPrice,
+            durationDays: doc.extensionDurationDays,
+          }
+        } : {})
       });
 
       if (success) {
@@ -88,6 +94,12 @@ export async function GET(req: NextRequest) {
         documentType: doc.type,
         daysLeft: 1,
         expiryDate: doc.expiryDate!,
+        ...(doc.extendedStatus === 'offered' && doc.extendedPrice && doc.extensionDurationDays ? {
+          extendedOffer: {
+            price: doc.extendedPrice,
+            durationDays: doc.extensionDurationDays,
+          }
+        } : {})
       });
 
       if (success) {

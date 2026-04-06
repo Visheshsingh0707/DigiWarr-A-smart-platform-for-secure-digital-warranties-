@@ -60,11 +60,37 @@ export async function GET() {
       },
     });
 
+    const extendedWarrantiesSold = await prisma.document.count({
+      where: {
+        userId: { in: customerIds },
+        createdByShopkeeper: true,
+        shopkeeperId: session.user.id,
+        type: 'WARRANTY',
+        extendedStatus: 'purchased',
+      },
+    });
+
+    const extendedRevenueAggr = await prisma.document.aggregate({
+      where: {
+        userId: { in: customerIds },
+        createdByShopkeeper: true,
+        shopkeeperId: session.user.id,
+        type: 'WARRANTY',
+        extendedStatus: 'purchased',
+      },
+      _sum: {
+        extendedPrice: true,
+      },
+    });
+    const extendedRevenue = extendedRevenueAggr._sum.extendedPrice || 0;
+
     return NextResponse.json({
       totalCustomers,
       activeWarranties,
       expiringSoon,
       totalWarranties,
+      extendedWarrantiesSold,
+      extendedRevenue,
       limit: 10,
       isAtLimit: totalCustomers >= 10,
       remainingSlots: Math.max(0, 10 - totalCustomers),

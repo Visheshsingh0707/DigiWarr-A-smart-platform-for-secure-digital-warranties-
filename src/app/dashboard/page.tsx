@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import {
   FileText, Shield, Receipt, AlertTriangle,
-  Search, Plus, Target, Store, Bell,
+  Search, Plus, Target, Store, Bell, Crown,
   CheckCircle2, XCircle, Filter, ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -13,7 +13,9 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import StatsCard from '@/components/StatsCard';
 import DocumentCard from '@/components/DocumentCard';
+import ExtendedWarrantyCard from '@/components/ExtendedWarrantyCard';
 import { SkeletonCard, SkeletonStats } from '@/components/SkeletonCard';
+import { toast } from 'react-hot-toast';
 
 type StatusFilter = 'ALL' | 'active' | 'expiring' | 'expired';
 type TypeFilter = 'ALL' | 'WARRANTY' | 'INVOICE' | 'POLICY';
@@ -103,7 +105,25 @@ export default function Dashboard() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Download error:', error);
-      alert('Failed to download document');
+      toast.error('Failed to download document');
+    }
+  };
+
+  const handlePurchaseExtended = async (id: string) => {
+    try {
+      const res = await fetch('/api/documents/purchase-extended', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: id }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to purchase extended warranty');
+      }
+      toast.success('Extended warranty purchased successfully!');
+      await fetchDocuments();
+    } catch (err: any) {
+      toast.error(err.message || 'Payment simulation failed');
     }
   };
 
@@ -160,6 +180,8 @@ export default function Dashboard() {
     : [];
 
   const personalDocs = filteredDocs.filter(d => !d.createdByShopkeeper);
+
+  const extendedOffers = filteredDocs.filter(d => d.extendedStatus === 'offered');
 
   // GSAP Animations
   useGSAP(() => {
@@ -265,6 +287,20 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extended Warranty Offers */}
+      {extendedOffers.length > 0 && (
+        <div className="gsap-section">
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-emerald-500">
+            <Crown className="h-5 w-5" /> Special Offers: Extend Your Peace of Mind
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {extendedOffers.map(doc => (
+              <ExtendedWarrantyCard key={doc.id} document={doc} onPurchase={handlePurchaseExtended} />
+            ))}
           </div>
         </div>
       )}

@@ -17,6 +17,10 @@ interface ExpiryNotificationParams {
   documentType: string;
   daysLeft: number;
   expiryDate: Date;
+  extendedOffer?: {
+    price: number;
+    durationDays: number;
+  };
 }
 
 export async function sendExpiryNotification({
@@ -26,6 +30,7 @@ export async function sendExpiryNotification({
   documentType,
   daysLeft,
   expiryDate,
+  extendedOffer,
 }: ExpiryNotificationParams) {
   const urgency = daysLeft <= 1 ? '🔴 URGENT' : '⚠️ Reminder';
   const subject = `${urgency}: Your ${documentType.toLowerCase()} "${documentTitle}" expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`;
@@ -79,6 +84,19 @@ export async function sendExpiryNotification({
         </table>
       </div>
 
+      ${extendedOffer ? `
+      <div style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="color: white; margin: 0 0 8px 0; font-size: 16px;">Extend your warranty!</h3>
+        <p style="color: #d1fae5; margin: 0 0 16px 0; font-size: 14px;">
+          Your shopkeeper has offered an extended warranty of ${extendedOffer.durationDays} days for ₹${extendedOffer.price}.
+        </p>
+        <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" 
+           style="display: inline-block; background: white; color: #059669; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">
+          Buy Extension
+        </a>
+      </div>
+      ` : ''}
+
       <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" 
          style="display: block; text-align: center; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; padding: 14px 24px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 14px;">
         View in Dashboard →
@@ -105,6 +123,35 @@ export async function sendExpiryNotification({
     return true;
   } catch (error) {
     console.error(`Failed to send email to ${to}:`, error);
+    return false;
+  }
+}
+
+export async function sendExtendedWarrantyConfirmation(to: string, userName: string, documentTitle: string, extendedExpiryDate: Date) {
+  const subject = `Confirmed: Extended Warranty for "${documentTitle}"`;
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="background-color: #0a0a1a; color: #f1f5f9; font-family: 'Inter', sans-serif; padding: 40px 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #111127; padding: 32px; border-radius: 16px;">
+    <h2 style="color: #10b981;">Extended Warranty Confirmed!</h2>
+    <p>Hi ${userName},</p>
+    <p>Your extended warranty for <strong>${documentTitle}</strong> has been successfully activated.</p>
+    <p>Your new expiry date is: <strong>${extendedExpiryDate.toLocaleDateString()}</strong></p>
+    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; background: #6366f1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 20px;">View Warranty</a>
+  </div>
+</body>
+</html>
+  `;
+  try {
+    if (!process.env.SMTP_USER) return true;
+    await transporter.sendMail({ from: process.env.SMTP_FROM || 'noreply@digiwarr.com', to, subject, html });
+    return true;
+  } catch (error) {
+    console.error(`Failed to send extended warranty confirmation to ${to}:`, error);
     return false;
   }
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { Users, FileText, AlertTriangle, Plus, Crown, TrendingUp } from 'lucide-react';
+import { Users, FileText, AlertTriangle, Plus, Crown, TrendingUp, Package } from 'lucide-react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -13,6 +13,7 @@ import AddCustomerModal from '@/components/AddCustomerModal';
 import UpgradeBanner from '@/components/UpgradeBanner';
 import EditWarrantyModal from '@/components/EditWarrantyModal';
 import DocumentCard from '@/components/DocumentCard';
+import OfferExtendedModal from '@/components/OfferExtendedModal';
 import { toast } from 'react-hot-toast';
 
 function ShopkeeperDashboardContent() {
@@ -26,6 +27,7 @@ function ShopkeeperDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingWarranty, setEditingWarranty] = useState<any>(null);
+  const [offeringWarranty, setOfferingWarranty] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,6 +96,20 @@ function ShopkeeperDashboardContent() {
       throw new Error(result.error || 'Failed to update warranty');
     }
     toast.success('Warranty updated successfully!');
+    await fetchWarranties();
+  };
+
+  const handleOfferExtended = async (id: string, price: number, duration: number) => {
+    const res = await fetch('/api/shopkeeper/offer-extended', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ documentId: id, extendedPrice: price, extensionDurationDays: duration }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to offer extended warranty');
+    }
+    toast.success('Extended warranty offered successfully!');
     await fetchWarranties();
   };
 
@@ -186,6 +202,8 @@ function ShopkeeperDashboardContent() {
             <StatsCard title="Expiring Soon" value={stats.expiringSoon} icon={AlertTriangle} gradient="from-red-500 to-pink-600" delay={0.3} />
           </div>
           <StatsCard title="Remaining Slots" value={stats.remainingSlots} subtitle={`${stats.totalCustomers}/${stats.limit} used`} icon={Crown} gradient="from-amber-500 to-orange-600" delay={0.4} />
+          <StatsCard title="Extended Sold" value={stats.extendedWarrantiesSold || 0} icon={Package} gradient="from-indigo-500 to-violet-600" delay={0.5} />
+          <StatsCard title="Extended Revenue" value={`₹${stats.extendedRevenue || 0}`} icon={TrendingUp} gradient="from-emerald-400 to-emerald-600" delay={0.6} />
         </div>
       )}
 
@@ -256,6 +274,7 @@ function ShopkeeperDashboardContent() {
                     index={i} 
                     onDownload={handleDownload}
                     onEdit={(doc) => setEditingWarranty(doc)}
+                    onOfferExtended={(doc) => setOfferingWarranty(doc)}
                   />
                 </div>
               ))}
@@ -318,6 +337,16 @@ function ShopkeeperDashboardContent() {
         onUpdate={handleUpdateWarranty}
         warranty={editingWarranty}
       />
+
+      {/* Offer Extended Modal */}
+      {offeringWarranty && (
+        <OfferExtendedModal
+          isOpen={!!offeringWarranty}
+          onClose={() => setOfferingWarranty(null)}
+          onOffer={handleOfferExtended}
+          documentId={offeringWarranty.id}
+        />
+      )}
     </div>
   );
 }

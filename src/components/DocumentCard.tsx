@@ -42,10 +42,16 @@ interface DocumentCardProps {
       name: string | null;
       email: string;
     } | null;
+    extendedStatus?: string;
+    extendedWarrantyExpiry?: string | null;
+    isExtendedOffered?: boolean;
+    extendedPrice?: number | null;
+    extensionDurationDays?: number | null;
   };
   onDelete?: (id: string) => void;
   onDownload?: (id: string) => void;
   onEdit?: (document: any) => void;
+  onOfferExtended?: (document: any) => void;
   index?: number;
 }
 
@@ -84,8 +90,9 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DocumentCard({ document: doc, onDelete, onDownload, onEdit, index = 0 }: DocumentCardProps) {
-  const status = getStatus(doc.expiryDate);
+export default function DocumentCard({ document: doc, onDelete, onDownload, onEdit, onOfferExtended, index = 0 }: DocumentCardProps) {
+  const effectiveExpiry = doc.extendedStatus === 'purchased' && doc.extendedWarrantyExpiry ? doc.extendedWarrantyExpiry : doc.expiryDate;
+  const status = getStatus(effectiveExpiry);
   const TypeIcon = getTypeIcon(doc.type);
   const StatusIcon = status.icon;
   const gradient = getTypeGradient(doc.type);
@@ -141,7 +148,13 @@ export default function DocumentCard({ document: doc, onDelete, onDownload, onEd
                 <p className="text-xs text-[var(--text-muted)] capitalize">
                   {doc.type.toLowerCase()}
                 </p>
-                {doc.createdByShopkeeper && (
+                {doc.extendedStatus === 'purchased' && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                    <Shield className="h-2.5 w-2.5" />
+                    Extended ✓
+                  </span>
+                )}
+                {doc.createdByShopkeeper && !doc.extendedStatus && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent-500 bg-accent-500/10 px-1.5 py-0.5 rounded-full">
                     <Store className="h-2.5 w-2.5" />
                     Shopkeeper
@@ -187,7 +200,7 @@ export default function DocumentCard({ document: doc, onDelete, onDownload, onEd
                 isWarning ? 'text-amber-500' :
                 'text-[var(--text-muted)]'
               }`} />
-              <span>Expires: {format(new Date(doc.expiryDate), 'MMM dd, yyyy')}</span>
+              <span>Expires: {format(new Date(effectiveExpiry!), 'MMM dd, yyyy')} {doc.extendedStatus === 'purchased' ? '(Extended)' : ''}</span>
             </div>
           )}
           {doc.purchaseDate && (
@@ -220,6 +233,20 @@ export default function DocumentCard({ document: doc, onDelete, onDownload, onEd
               >
                 {isEditLocked ? <LockIcon className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
               </button>
+            )}
+            {onOfferExtended && doc.extendedStatus === 'not_offered' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onOfferExtended(doc); }}
+                className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-indigo-500/10 hover:text-indigo-500 transition-colors"
+                title="Offer Extended Warranty"
+              >
+                <Store className="h-4 w-4" />
+              </button>
+            )}
+            {doc.extendedStatus === 'offered' && (
+              <span className="inline-flex items-center text-xs font-medium text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg mr-2" title="Extended warranty is currently offered to the customer">
+                Offer Pending
+              </span>
             )}
             {onDownload && (
               <button

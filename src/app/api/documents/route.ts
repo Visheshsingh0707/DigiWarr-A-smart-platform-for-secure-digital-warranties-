@@ -32,6 +32,12 @@ export async function GET() {
         createdAt: true,
         updatedAt: true,
         editCount: true,
+        isExtendedOffered: true,
+        extendedPrice: true,
+        extensionDurationDays: true,
+        extendedStatus: true,
+        paymentStatus: true,
+        extendedWarrantyExpiry: true,
         // Include shopkeeper details if the document was created by a shopkeeper
         shopkeeper: {
           select: {

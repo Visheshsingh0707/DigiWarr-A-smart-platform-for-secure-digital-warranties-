@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Package, Calendar, User as UserIcon, Upload, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, User as UserIcon, Upload, Loader2, CheckCircle2, RefreshCw, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,10 @@ export default function CreateWarrantyPage() {
   const [purchaseDate, setPurchaseDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [file, setFile] = useState<File | null>(null);
+
+  const [offerExtended, setOfferExtended] = useState(false);
+  const [extendedPrice, setExtendedPrice] = useState('');
+  const [extensionDurationDays, setExtensionDurationDays] = useState('');
 
   const [ocrStatus, setOcrStatus] = useState<{ status: string; progress: number } | null>(null);
 
@@ -91,6 +95,11 @@ export default function CreateWarrantyPage() {
       return;
     }
 
+    if (offerExtended && (!extendedPrice || !extensionDurationDays)) {
+      toast.error('Please enter price and duration for the extended warranty');
+      return;
+    }
+
     setSubmitting(true);
     const toastId = toast.loading('Creating warranty...');
 
@@ -102,6 +111,11 @@ export default function CreateWarrantyPage() {
       formData.append('expiryDate', expiryDate);
       if (file) {
         formData.append('file', file);
+      }
+      formData.append('offerExtended', String(offerExtended));
+      if (offerExtended) {
+        formData.append('extendedPrice', extendedPrice);
+        formData.append('extensionDurationDays', extensionDurationDays);
       }
 
       const res = await fetch('/api/shopkeeper/warranties', {
@@ -264,6 +278,70 @@ export default function CreateWarrantyPage() {
                 id="warranty-expiry-date"
               />
             </div>
+          </div>
+
+          {/* Extended Warranty Offering */}
+          <div className="bg-gradient-to-r from-[var(--bg-tertiary)] to-emerald-900/10 p-5 rounded-xl border border-emerald-500/20 shadow-sm transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <label className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  Offer Extended Warranty
+                </label>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Allow customer to purchase extra warranty coverage later.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOfferExtended(!offerExtended)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  offerExtended ? 'bg-emerald-500' : 'bg-gray-600'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  offerExtended ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+            
+            <AnimatePresence>
+              {offerExtended && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="grid grid-cols-2 gap-4 pt-4 overflow-hidden border-t border-[var(--border)] mt-4"
+                >
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+                      Price (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      value={extendedPrice}
+                      onChange={(e) => setExtendedPrice(e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. 500"
+                      min="1"
+                      required={offerExtended}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+                      Duration (Days) *
+                    </label>
+                    <input
+                      type="number"
+                      value={extensionDurationDays}
+                      onChange={(e) => setExtensionDurationDays(e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. 365"
+                      min="1"
+                      required={offerExtended}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <button type="submit" className="btn-primary w-full" disabled={submitting || !!ocrStatus} id="warranty-submit">

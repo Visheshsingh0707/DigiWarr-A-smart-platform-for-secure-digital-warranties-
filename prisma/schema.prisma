@@ -31,6 +31,7 @@ model User {
   // Documents created by this shopkeeper
   createdDocuments Document[]           @relation("ShopkeeperDocuments")
   EditLog          EditLog[]
+  AuditLog         AuditLog[]
 }
 
 model Session {
@@ -84,6 +85,14 @@ model Document {
   updatedAt           DateTime  @updatedAt
   editCount           Int       @default(0)
   editLogs            EditLog[]
+
+  // Extended Warranty Fields
+  isExtendedOffered     Boolean   @default(false)
+  extendedPrice         Float?
+  extensionDurationDays Int?
+  extendedStatus        String    @default("not_offered") // "not_offered" | "offered" | "purchased"
+  paymentStatus         String    @default("pending")     // "pending" | "completed"
+  extendedWarrantyExpiry DateTime?
 }
 
 model EditLog {
@@ -96,4 +105,13 @@ model EditLog {
   newValues    String
   reason       String
   createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  details   String
+  createdAt DateTime @default(now())
 }
