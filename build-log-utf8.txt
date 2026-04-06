@@ -1,0 +1,73 @@
+﻿
+> digiwarr@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.5
+  - Environments: .env
+
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Users\Divy 
+Singh\AppData\Roa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (:  
+  String) [], RemoteExc   
+ eption
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+> Build error occurred
+Error: EINVAL: invalid 
+argument, readlink 
+'C:\Users\Divy Singh\OneDr
+ive\Desktop\DigiWarr\Digiw
+arr\.next\app-build-manife
+st.json'
+    at async 
+Object.readlink (node:inte
+rnal/fs/promises:973:10)
+    at async 
+C:\Users\Divy Singh\OneDri
+ve\Desktop\DigiWarr\Digiwa
+rr\node_modules\next\dist\
+lib\recursive-delete.js:58
+:30
+    at async Promise.all 
+(index 0)
+    at async 
+recursiveDelete 
+(C:\Users\Divy Singh\OneDr
+ive\Desktop\DigiWarr\Digiw
+arr\node_modules\next\dist
+\lib\recursive-delete.js:5
+1:5)
+    at async 
+C:\Users\Divy Singh\OneDri
+ve\Desktop\DigiWarr\Digiwa
+rr\node_modules\next\dist\
+build\index.js:692:17
+    at async 
+Span.traceAsyncFn 
+(C:\Users\Divy Singh\OneDr
+ive\Desktop\DigiWarr\Digiw
+arr\node_modules\next\dist
+\trace\trace.js:154:20)
+    at async build 
+(C:\Users\Divy Singh\OneDr
+ive\Desktop\DigiWarr\Digiw
+arr\node_modules\next\dist
+\build\index.js:366:9) {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'readlink',
+  path: 'C:\\Users\\Divy S
+ingh\\OneDrive\\Desktop\\D
+igiWarr\\Digiwarr\\.next\\
+app-build-manifest.json'
+}
