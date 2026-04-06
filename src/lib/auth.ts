@@ -42,9 +42,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error('Invalid password');
         }
 
-        if (!user.emailVerified) {
-          throw new Error('Please verify your email address to log in');
-        }
+        // if (!user.emailVerified) {
+        //   throw new Error('Please verify your email address to log in');
+        // }
 
         return {
           id: user.id,
