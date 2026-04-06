@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String     @id @default(cuid())
+  name                String?
+  email               String     @unique
+  password            String
+  role                String     @default("CUSTOMER") // SHOPKEEPER | CUSTOMER
+  encryptionKeySalt   String
+  emailVerified       DateTime?
+  verificationToken   String?    @unique
+  verificationExpires DateTime?
+  resetToken          String?    @unique
+  resetTokenExpires   DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  documents           Document[]
+  sessions            Session[]
+
+  // Many-to-many: when this user IS the shopkeeper
+  shopkeeperLinks  ShopkeeperCustomer[] @relation("ShopkeeperLinks")
+  // Many-to-many: when this user IS the customer
+  customerLinks    ShopkeeperCustomer[] @relation("CustomerLinks")
+  // Documents created by this shopkeeper
+  createdDocuments Document[]           @relation("ShopkeeperDocuments")
+  EditLog          EditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  device    String?
+  ip        String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model ShopkeeperCustomer {
+  id           String   @id @default(cuid())
+  shopkeeperId String
+  customerId   String
+  shopkeeper   User     @relation("ShopkeeperLinks", fields: [shopkeeperId], references: [id], onDelete: Cascade)
+  customer     User     @relation("CustomerLinks", fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([shopkeeperId, customerId])
+}
+
+model Document {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopkeeperId        String?
+  shopkeeper          User?     @relation("ShopkeeperDocuments", fields: [shopkeeperId], references: [id])
+  title               String
+  type                String    @default("WARRANTY") // WARRANTY, INVOICE, POLICY
+  productName         String?
+  provider            String?
+  purchaseDate        DateTime?
+  expiryDate          DateTime?
+  renewalDate         DateTime?
+  amount              String?
+  storagePath         String
+  originalName        String
+  mimeType            String
+  fileSize            Int
+  iv                  String
+  authTag             String
+  ocrText             String?
+  createdByShopkeeper Boolean   @default(false)
+  notified2d          Boolean   @default(false)
+  notified1d          Boolean   @default(false)
+  notifiedExp         Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  editCount           Int       @default(0)
+  editLogs            EditLog[]
+}
+
+model EditLog {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  shopkeeperId String
+  shopkeeper   User     @relation(fields: [shopkeeperId], references: [id])
+  oldValues    String
+  newValues    String
+  reason       String
+  createdAt    DateTime @default(now())
+}
