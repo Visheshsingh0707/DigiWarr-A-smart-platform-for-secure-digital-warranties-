@@ -1,24 +1,33 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
+import { Shield, CheckCircle2 } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { ExtractedData } from '@/lib/parser';
 
 export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
-  const handleUpload = async (file: File, title: string, type: string) => {
+  const handleUpload = async (file: File, extractedData: ExtractedData & { title: string }) => {
     setIsUploading(true);
     const toastId = toast.loading('Encrypting and uploading securely...');
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('title', title);
-      formData.append('type', type);
+      formData.append('title', extractedData.title);
+      formData.append('type', extractedData.type);
+      
+      // Append the recognized and potentially manually-corrected data
+      if (extractedData.productName) formData.append('productName', extractedData.productName);
+      if (extractedData.provider) formData.append('provider', extractedData.provider);
+      if (extractedData.purchaseDate) formData.append('purchaseDate', extractedData.purchaseDate);
+      if (extractedData.expiryDate) formData.append('expiryDate', extractedData.expiryDate);
+      if (extractedData.renewalDate) formData.append('renewalDate', extractedData.renewalDate);
+      if (extractedData.amount) formData.append('amount', extractedData.amount);
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -51,7 +60,7 @@ export default function UploadPage() {
         <h1 className="text-3xl font-bold mb-2">Secure Upload.</h1>
         <p className="text-[var(--text-secondary)]">
           Your documents are encrypted using AES-256 before being stored. 
-          Smart OCR extracts dates locally without sending your data to external APIs.
+          Smart OCR extracts dates natively in your browser without sending raw, unencrypted images to external APIs.
         </p>
       </motion.div>
 
@@ -84,7 +93,7 @@ export default function UploadPage() {
               </li>
               <li className="flex gap-3">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>OCR text extraction runs completely locally on our servers.</span>
+                <span>OCR text extraction runs completely locally on your device.</span>
               </li>
             </ul>
           </div>
