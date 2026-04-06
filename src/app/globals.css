@@ -129,47 +129,67 @@
   }
 }
 
-/* --- Techy UX Enhancements --- */
+/* --- Premium Hover Border Effect --- */
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes borderSpin {
+  0%   { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
 }
 
-.animated-border {
+/* We use a wrapper approach: the outer div IS the border frame,
+   the inner card sits inside with a 2px gap (the border thickness). */
+
+.glow-border {
   position: relative;
-  overflow: hidden;
-  z-index: 1;
+  border-radius: 12px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
-.animated-border::before {
+/* The spinning gradient pseudo-element (the "border line") */
+.glow-border::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(from 0deg, transparent 60%, rgba(99, 102, 241, 0.7) 80%, rgba(20, 184, 166, 0.9) 100%);
-  transform-origin: 0 0;
-  animation: spin 3.5s linear infinite;
-  z-index: -1;
-  translate: -50% -50%;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px; /* this controls border thickness */
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 25%,
+    #00cfff 50%,
+    #00ff88 75%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.4s ease;
+  animation: borderSpin 3s linear infinite;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.animated-border:hover::before {
+/* On hover: show the border, add glow, subtle scale */
+.glow-border:hover::before {
   opacity: 1;
 }
 
-.animated-border::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border-radius: inherit;
-  z-index: -1;
+.glow-border:hover {
+  transform: scale(1.02);
+  box-shadow:
+    0 0 15px rgba(0, 207, 255, 0.15),
+    0 0 30px rgba(0, 255, 136, 0.08);
+}
+
+/* Fallback: CSS @property for the custom property animation.
+   Supported in Chrome/Edge/Safari. Firefox gracefully degrades 
+   to a static gradient border which still looks great. */
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
 
 .tech-grid {

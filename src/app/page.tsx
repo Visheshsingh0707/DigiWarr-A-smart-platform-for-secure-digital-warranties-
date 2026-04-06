@@ -42,9 +42,9 @@ export default function Home() {
 
     // 2. Feature Grid Stagger
     gsap.fromTo('.gsap-feature-card',
-      { opacity: 0, scale: 0.9, y: 30 },
+      { opacity: 0, scale: 0.9, y: 40 },
       { 
-        opacity: 1, scale: 1, y: 0, duration: 0.8, stagger: 0.1, ease: 'back.out(1.5)',
+        opacity: 1, scale: 1, y: 0, duration: 1.4, stagger: 0.15, ease: 'back.out(1.5)',
         scrollTrigger: { 
           trigger: '#features', 
           start: 'top 75%',
@@ -73,9 +73,9 @@ export default function Home() {
 
     // 4. Pricing Cards Hover/Enter
     gsap.fromTo('.gsap-price-card',
-      { opacity: 0, y: 40 },
+      { opacity: 0, y: 50 },
       { 
-        opacity: 1, y: 0, duration: 1, stagger: 0.2, ease: 'power3.out', 
+        opacity: 1, y: 0, duration: 1.4, stagger: 0.3, ease: 'power3.out', 
         scrollTrigger: { 
           trigger: '#pricing', 
           start: 'top 75%',
@@ -88,9 +88,9 @@ export default function Home() {
     const fadeElements = gsap.utils.toArray('.gsap-fade-in') as HTMLElement[];
     fadeElements.forEach((el) => {
       gsap.fromTo(el, 
-        { opacity: 0, y: 30 }, 
+        { opacity: 0, y: 40 }, 
         { 
-          opacity: 1, y: 0, duration: 1, ease: 'power3.out', 
+          opacity: 1, y: 0, duration: 1.4, ease: 'power3.out', 
           scrollTrigger: { 
             trigger: el, 
             start: 'top 85%',
@@ -219,15 +219,12 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, i) => (
-              <div key={i} className="gsap-feature-card relative group h-full transition-shadow hover:shadow-2xl hover:shadow-brand-500/5 cursor-default">
-                <div className="absolute inset-0 animated-border rounded-2xl z-0 pointer-events-none"></div>
-                <div className="relative z-10 glass-card p-8 h-full flex flex-col border-none bg-transparent m-[1px]">
-                  <div className={`h-14 w-14 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3`}>
-                    <feature.icon className={`h-7 w-7 ${feature.color}`} />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
+              <div key={i} className="gsap-feature-card glow-border glass-card p-8 group h-full cursor-default">
+                <div className={`h-14 w-14 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                  <feature.icon className={`h-7 w-7 ${feature.color}`} />
                 </div>
+                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -235,21 +232,21 @@ export default function Home() {
       </section>
 
       {/* How It Works (Stacked Cards) */}
-      <section id="how-it-works" className="relative z-10 py-32 bg-[var(--bg-primary)]">
+      <section id="how-it-works" className="relative z-10 pt-14 pb-6 bg-[var(--bg-primary)]">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16 max-w-xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 gsap-text-scrub">How It Works</h2>
+          <div className="text-center mb-3 max-w-xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-bold mb-2 gsap-text-scrub">How It Works</h2>
             <p className="text-[var(--text-muted)] gsap-fade-in">Three simple steps to secure your documents forever.</p>
           </div>
 
-          <div className="relative pb-32">
+          <div className="relative pb-40">
             {steps.map((item, i) => (
               <div 
                 key={i} 
-                className="gsap-step-card sticky"
-                style={{ top: `${120 + i * 20}px`, zIndex: i }}
+                className="gsap-step-card sticky group mb-4 glow-border"
+                style={{ top: `${100 + i * 16}px`, zIndex: i }}
               >
-                <div className="flex items-start gap-6 glass-card p-10 mb-8 border border-[var(--border)] shadow-2xl origin-top bg-[var(--bg-secondary)] relative">
+                <div className="flex items-start gap-5 glass-card p-7 relative shadow-2xl origin-top">
                   <div className={`flex-shrink-0 h-16 w-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg shadow-brand-500/20`}>
                     <item.icon className="h-8 w-8 text-white" />
                   </div>
@@ -266,7 +263,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative z-10 py-24 bg-[var(--bg-secondary)] border-y border-[var(--border)] pt-40 -mt-24">
+      <section id="pricing" className="relative z-10 py-24 bg-[var(--bg-secondary)] border-y border-[var(--border)] -mt-4">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16 max-w-xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold mb-4 gsap-text-scrub">Simple Pricing</h2>
@@ -277,47 +274,45 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Free Plan */}
-            <div className="gsap-price-card glass-card p-8 h-full flex flex-col transition-transform hover:-translate-y-2">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-1">Free</h3>
-                <p className="text-sm text-[var(--text-muted)]">Perfect for getting started</p>
-              </div>
-              <div className="mb-8">
-                <span className="text-4xl font-black">₹0</span>
-                <span className="text-[var(--text-muted)]"> /forever</span>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {[
-                  'Up to 10 customers (Shopkeeper)',
-                  'Unlimited document uploads',
-                  'AES-256 encryption',
-                  'Smart OCR extraction',
-                  'Expiry email notifications',
-                  'Customer self-service portal',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/login" className="btn-secondary w-full text-center">
-                Get Started Free
-              </Link>
+            <div className="gsap-price-card glow-border glass-card p-8 h-full flex flex-col">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-1">Free</h3>
+                  <p className="text-sm text-[var(--text-muted)]">Perfect for getting started</p>
+                </div>
+                <div className="mb-8">
+                  <span className="text-4xl font-black">₹0</span>
+                  <span className="text-[var(--text-muted)]"> /forever</span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    'Up to 10 customers (Shopkeeper)',
+                    'Unlimited document uploads',
+                    'AES-256 encryption',
+                    'Smart OCR extraction',
+                    'Expiry email notifications',
+                    'Customer self-service portal',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="gsap-magnetic">
+                  <Link href="/login" className="btn-secondary w-full text-center">
+                    Get Started Free
+                  </Link>
+                </div>
             </div>
 
             {/* Pro Plan */}
-            <div className="gsap-price-card relative transition-transform hover:-translate-y-2 shadow-2xl shadow-brand-500/10 h-full">
-              <div className="absolute inset-0 animated-border rounded-2xl z-0 pointer-events-none"></div>
-              
+            <div className="gsap-price-card glow-border glass-card p-8 h-full flex flex-col relative">
               <div className="absolute -top-3 right-6 z-20">
                 <span className="inline-flex items-center gap-1 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                   <Star className="h-3 w-3" />
                   Popular
                 </span>
               </div>
-
-              <div className="relative z-10 glass-card p-8 h-full flex flex-col border-none bg-transparent m-[1px]">
                 <div className="mb-6">
                   <h3 className="text-xl font-bold mb-1">Pro</h3>
                   <p className="text-sm text-[var(--text-muted)]">For growing businesses</p>
@@ -347,7 +342,6 @@ export default function Home() {
                     Coming Soon
                   </button>
                 </div>
-              </div>
             </div>
           </div>
         </div>
